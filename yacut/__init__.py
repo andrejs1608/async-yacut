@@ -3,9 +3,9 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 
-from settings import config
-
 load_dotenv()
+
+from settings import config
 
 
 app = Flask(__name__)
