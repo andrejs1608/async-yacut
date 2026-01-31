@@ -1,4 +1,4 @@
-from flask import flash, redirect, render_template
+from flask import flash, redirect, render_template, url_for
 
 from . import app, db
 from .constants import UPLOAD_ERROR
@@ -14,17 +14,29 @@ def index_view():
         return render_template('index.html', form=form)
 
     custom_id = form.custom_id.data
-    if not custom_id:
+
+    if custom_id:
+        if (
+            URLMap.query.filter_by(short=custom_id).first()
+            or custom_id == 'files'
+        ):
+            flash('Предложенный вариант короткой ссылки уже существует.')
+            return render_template('index.html', form=form)
+    else:
         custom_id = URLMap.get_unique_short_id()
 
     url_map = URLMap(original=form.original_link.data, short=custom_id)
     db.session.add(url_map)
     db.session.commit()
 
+    short_url = url_for(
+        'redirect_short', short_id=url_map.short, _external=True
+    )
+
     return render_template(
         'index.html',
         form=form,
-        short_url=url_map.get_short_url()
+        short_url=short_url
     )
 
 
@@ -41,7 +53,13 @@ async def file_upload_view():
         file_links = []
         for file_info in yadisk_results:
             new_map = URLMap.create(file_info['url'])
-            file_links.append((file_info['filename'], new_map.get_short_url()))
+
+            file_links.append((
+                file_info['filename'],
+                url_for(
+                    'redirect_short', short_id=new_map.short, _external=True
+                )
+            ))
 
         return render_template(
             'upload_files.html',
@@ -49,9 +67,6 @@ async def file_upload_view():
             file_links=file_links
         )
 
-    except (URLMap.ObjectCreateError, URLMap.ShortGenerateError) as exc:
-        flash(str(exc))
-        return render_template('upload_files.html', form=form)
     except Exception as exc:
         flash(UPLOAD_ERROR.format(str(exc)))
         return render_template('upload_files.html', form=form)
