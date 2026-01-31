@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}YaCut — загрузка файлов{% endblock %}
+
+{% block content %}
+<main style="padding-top: 100px;">
+  <section class="container my-5 px-4">
+    <h1 class="text-center"><span style="color:red">Ya</span>Cut</h1>
+
+    <p class="text-center my-4 fw-normal">
+      Загрузите файлы и получите на них короткие ссылки
+    </p>
+
+    <div class="row my-3">
+      <div class="col-sm-3"></div>
+      <div class="col-sm-6 text-center">
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-danger">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" enctype="multipart/form-data">
+          {{ form.csrf_token }}
+          {{ form.files(class="form-control form-control-lg py-2 mb-3") }}
+          {% for error in form.files.errors %}
+            <p><span style="color:red">{{ error }}</span></p>
+          {% endfor %}
+          {{ form.submit(class="btn btn-primary w-50") }}
+        </form>
+      </div>
+      <div class="col-sm-3"></div>
+    </div>
+
+    {% if file_links %}
+    <div class="row mt-5">
+      <div class="col-sm-2"></div>
+      <div class="col-sm-8">
+        <h5 class="text-center my-3">Ваши короткие ссылки на файлы</h5>
+        <div class="table-responsive">
+          <table class="table table-hover shadow-sm bg-white">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">Имя файла</th>
+                <th scope="col">Короткая ссылка</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for name, link in file_links %}
+                <tr>
+                  <td class="align-middle">{{ name }}</td>
+                  <td class="align-middle">
+                    <a href="{{ link }}" target="_blank" class="text-decoration-none fw-bold">
+                      {{ link }}
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-sm-2"></div>
+    </div>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}
