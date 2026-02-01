@@ -1,10 +1,13 @@
 from http import HTTPStatus
+
 from flask import jsonify, request
 
 from . import app
-from .constants import NO_BODY, EMPTY_FIELD
+from .constants import EMPTY_FIELD, NO_BODY, SHORT_NOT_FOUND
 from .error_handlers import InvalidAPIUsage
+from .exceptions import ObjectCreateError, ShortGenerateError
 from .models import URLMap
+from .utils import get_urlmap_by_short_id
 
 
 @app.route('/api/id/', methods=['POST'])
@@ -19,28 +22,22 @@ def add_url_map():
 
     custom_id = data.get('custom_id')
 
-    if custom_id:
-        if (
-            URLMap.query.filter_by(short=custom_id).first()
-            or custom_id == 'files'
-        ):
-            raise InvalidAPIUsage(
-                'Предложенный вариант короткой ссылки уже существует.'
-            )
-
     try:
-
         url_map = URLMap.create(data['url'], custom_id, True)
         return jsonify(url_map.to_dict()), HTTPStatus.CREATED
 
-    except Exception as exc:
-        raise InvalidAPIUsage(str(exc))
+    except (ObjectCreateError, ShortGenerateError) as exc:
+        raise InvalidAPIUsage(str(exc), HTTPStatus.BAD_REQUEST)
+    except Exception:
+        raise InvalidAPIUsage(
+            'Internal Server Error', HTTPStatus.INTERNAL_SERVER_ERROR
+        )
 
 
 @app.route('/api/id/<string:short_id>/', methods=['GET'])
 def get_url(short_id):
-    result = URLMap.query.filter_by(short=short_id).first()
+    result = get_urlmap_by_short_id(short_id)
     if result is None:
-        raise InvalidAPIUsage('Указанный id не найден', HTTPStatus.NOT_FOUND)
+        raise InvalidAPIUsage(SHORT_NOT_FOUND, HTTPStatus.NOT_FOUND)
 
     return jsonify({'url': result.original}), HTTPStatus.OK

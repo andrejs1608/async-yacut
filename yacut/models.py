@@ -1,58 +1,38 @@
 import re
-import random
-import string
 from datetime import datetime
+
 from flask import url_for
+
 from . import db
+from .constants import (INVALID_SHORT_ID, LINK_TAKEN,
+                        ORIGINAL_URL_SIZE, SHORT_URL_SIZE)
+from .exceptions import ObjectCreateError
+from .utils import get_unique_short_id
 
 
 class URLMap(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    original = db.Column(db.String(2048), nullable=False)
-    short = db.Column(db.String(16), unique=True, nullable=False)
+    original = db.Column(db.String(ORIGINAL_URL_SIZE), nullable=False)
+    short = db.Column(db.String(SHORT_URL_SIZE), unique=True, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-
-    class ObjectCreateError(Exception):
-        pass
-
-    class ShortGenerateError(Exception):
-        pass
-
-    @staticmethod
-    def get_unique_short_id():
-        chars = string.ascii_letters + string.digits
-        for _ in range(10):
-            short_id = ''.join(random.choices(chars, k=6))
-            if not URLMap.query.filter_by(short=short_id).first():
-                return short_id
-        raise URLMap.ShortGenerateError(
-            'Не удалось сгенерировать уникальный ID'
-        )
-
-    @staticmethod
-    def get(short):
-        return URLMap.query.filter_by(short=short).first()
 
     @classmethod
     def create(cls, original, custom_id=None, validate=False):
         if not custom_id:
-            custom_id = cls.get_unique_short_id()
+            custom_id = get_unique_short_id()
         else:
-            if custom_id in ['example', 'api', 'admin', 'index']:
-                raise cls.ObjectCreateError(
-                    'Предложенный вариант короткой ссылки уже существует.'
-                )
+            if custom_id == 'files':
+                raise ObjectCreateError(LINK_TAKEN)
+
             if cls.query.filter_by(short=custom_id).first():
-                raise cls.ObjectCreateError(f'Имя "{custom_id}" уже занято.')
+                raise ObjectCreateError(LINK_TAKEN)
 
             if validate:
                 if (
-                    len(custom_id) > 16 or
+                    len(custom_id) > SHORT_URL_SIZE or
                     not re.match(r'^[A-Za-z0-9]+$', custom_id)
                 ):
-                    raise cls.ObjectCreateError(
-                        'Указано недопустимое имя для короткой ссылки'
-                    )
+                    raise ObjectCreateError(INVALID_SHORT_ID)
 
         obj = cls(original=original, short=custom_id)
         db.session.add(obj)

@@ -3,13 +3,15 @@ from flask_wtf.file import MultipleFileField
 from wtforms import StringField, SubmitField, ValidationError
 from wtforms.validators import DataRequired, Length, Optional, Regexp
 
-from yacut.models import URLMap
+from .constants import (CHOOSE_FILES, FIELD_REQUIRED,
+                        LINK_TAKEN, SHORT_LINK_DESC)
+from .models import URLMap
 
 
 class URLMapForm(FlaskForm):
     original_link = StringField(
         "Длинная ссылка",
-        validators=[DataRequired(message='Обязательное поле')],
+        validators=[DataRequired(message=FIELD_REQUIRED)],
     )
     custom_id = StringField(
         "Короткая ссылка",
@@ -17,7 +19,7 @@ class URLMapForm(FlaskForm):
             Optional(),
             Length(
                 max=16,
-                message='Короткая ссылка не длиннее 16 символов',
+                message=SHORT_LINK_DESC,
             ),
             Regexp(
                 r'^[A-Za-z0-9]+$',
@@ -30,14 +32,12 @@ class URLMapForm(FlaskForm):
     def validate_custom_id(self, field):
         if field.data:
             if URLMap.query.filter_by(short=field.data).first():
-                raise ValidationError(
-                    'Предложенный вариант короткой ссылки уже существует.'
-                )
+                raise ValidationError(LINK_TAKEN)
 
 
 class UploadFilesForm(FlaskForm):
     files = MultipleFileField(
         'Файлы',
-        validators=[DataRequired(message='Выберите хотя бы один файл')]
+        validators=[DataRequired(message=CHOOSE_FILES)]
     )
     submit = SubmitField('Загрузить')

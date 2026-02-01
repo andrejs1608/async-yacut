@@ -1,9 +1,12 @@
+from http import HTTPStatus
+
 from flask import flash, redirect, render_template, url_for
 
 from . import app, db
 from .constants import UPLOAD_ERROR
 from .forms import UploadFilesForm, URLMapForm
 from .models import URLMap
+from .utils import get_urlmap_by_short_id, get_unique_short_id
 from .yadisk import upload_files_to_yadisk
 
 
@@ -23,7 +26,7 @@ def index_view():
             flash('Предложенный вариант короткой ссылки уже существует.')
             return render_template('index.html', form=form)
     else:
-        custom_id = URLMap.get_unique_short_id()
+        custom_id = get_unique_short_id()
 
     url_map = URLMap(original=form.original_link.data, short=custom_id)
     db.session.add(url_map)
@@ -74,5 +77,7 @@ async def file_upload_view():
 
 @app.route('/<string:short_id>', methods=['GET'])
 def redirect_short(short_id):
-    url_map = URLMap.query.filter_by(short=short_id).first_or_404()
+    url_map = get_urlmap_by_short_id(short_id)
+    if not url_map:
+        return render_template('404.html'), HTTPStatus.NOT_FOUND.value
     return redirect(url_map.original)

@@ -1,7 +1,8 @@
 import asyncio
+
 import aiohttp
 
-from .constants import REQUEST_UPLOAD_URL, AUTH_HEADERS
+from .constants import AUTH_HEADERS, REQUEST_UPLOAD_URL
 
 
 async def upload_files_to_yadisk(files):
