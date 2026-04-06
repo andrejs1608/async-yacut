@@ -1,6 +1,6 @@
 # YaCut
 
-**Foodgram is a service for publishing recipes and automatically generating shopping lists.**
+**YaCut is a link shortening service. Its purpose is to associate a long user-provided link with a shortened one, either provided by the user or by the service.**
 
 ## Key features
 
