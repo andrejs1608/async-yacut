@@ -1,34 +1,50 @@
-### Как запустить проект Yacut:
+# YaCut
 
-Клонировать репозиторий и перейти в него в командной строке:
+**Foodgram is a service for publishing recipes and automatically generating shopping lists.**
+
+## Key features
+
+- Generate short links and link them to the original long links
+- Redirect to the original address when accessing short links
+
+## Technology stack
+
+- Python 3.10
+- Flask 2.0
+- Jinja2 3.0
+- SQLAlchemy 1.4
+
+### How to run the Yacut project:
+
+Clone the repository and navigate to it on the command line:
 
 ```
-git clone 
+git clone
 ```
 
 ```
 cd yacut
 ```
 
-Cоздать и активировать виртуальное окружение:
+Create and activate a virtual environment:
 
 ```
 python3 -m venv venv
 ```
 
-* Если у вас Linux/macOS
+* If you're on Linux/macOS
 
-    ```
-    source venv/bin/activate
-    ```
+```
+source venv/bin/activate
+```
 
-* Если у вас windows
+* If you're on Windows
 
-    ```
-    source venv/scripts/activate
-    ```
+```
+source venv/scripts/activate
+```
 
-Установить зависимости из файла requirements.txt:
+Install dependencies from the requirements.txt file:
 
 ```
 python3 -m pip install --upgrade pip
@@ -38,7 +54,7 @@ python3 -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Создать в директории проекта файл .env с четыремя переменными окружения:
+Create a .env file with four variables in the project directory Environment:
 
 ```
 FLASK_APP=yacut
@@ -47,7 +63,7 @@ SECRET_KEY=your_secret_key
 DB=sqlite:///db.sqlite3
 ```
 
-Создать базу данных и применить миграции:
+Create a database and apply migrations:
 
 ```
 flask db upgrade
